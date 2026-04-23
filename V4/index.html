@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Flow Ultimate</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'] 
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .status-btn { @apply px-3 py-2 text-[10px] font-bold uppercase rounded-lg border-2 transition-all whitespace-nowrap flex-1 text-center; }
+        
+        /* Mobile-friendly horizontal scroll for buttons if they overflow */
+        .btn-container::-webkit-scrollbar { display: none; }
+        .btn-container { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 min-h-screen selection:bg-blue-500/30">
+
+    <div class="max-w-4xl mx-auto p-4 md:p-10">
+        <header class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-3xl md:text-4xl font-black tracking-tighter">FILEFLOW<span class="text-blue-500">.6</span></h1>
+                <p class="text-xs font-mono text-slate-400 uppercase tracking-widest mt-1">Status: Production Ready</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="toggleDarkMode()" class="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
+                    <span id="theme-icon">🌙</span>
+                </button>
+                <button onclick="exportData()" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition">Export</button>
+            </div>
+        </header>
+
+        <div id="setupView" class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-800 shadow-xl mb-10 hidden">
+            <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
+                <span class="w-2 h-2 bg-blue-500 rounded-full animate-ping"></span>
+                Initialize Batch Range
+            </h2>
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">From ID</label>
+                    <input type="number" id="rangeStart" value="0" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border-none focus:ring-2 ring-blue-500 outline-none font-mono text-xl">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">To ID</label>
+                    <input type="number" id="rangeEnd" value="10" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border-none focus:ring-2 ring-blue-500 outline-none font-mono text-xl">
+                </div>
+            </div>
+            <button onclick="initializeProject()" class="w-full py-4 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-black hover:opacity-90 transition-all">
+                GENERATE SEQUENCE
+            </button>
+        </div>
+
+        <div id="appView" class="hidden space-y-6">
+            <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                <div class="flex justify-between items-end mb-4">
+                    <div class="space-y-1">
+                        <span id="progressText" class="text-4xl font-black text-blue-500">0%</span>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Completion</p>
+                    </div>
+                    <div class="text-right hidden md:block">
+                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Avg Lead Times</p>
+                        <div class="flex gap-4 text-sm font-mono">
+                            <div class="text-amber-500">VAL: <span id="avg-val">0s</span></div>
+                            <div class="text-blue-500">UP: <span id="avg-up">0s</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-blue-500 transition-all duration-1000 shadow-[0_0_20px_rgba(59,130,246,0.4)]" style="width: 0%"></div>
+                </div>
+                <div class="md:hidden flex justify-between mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 font-mono text-[10px]">
+                    <span>AVG VALIDATE: <b id="avg-val-m">0s</b></span>
+                    <span>AVG UPLOAD: <b id="avg-up-m">0s</b></span>
+                </div>
+            </div>
+
+            <input type="text" id="searchInput" oninput="renderList()" placeholder="Filter files..." 
+                class="w-full bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 focus:ring-2 ring-blue-500 outline-none shadow-sm transition-all">
+
+            <div id="fileListContainer" class="space-y-3"></div>
+
+            <button onclick="resetApp()" class="w-full py-4 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition">
+                Wipe Current Batch Data
+            </button>
+        </div>
+
+        <footer class="mt-20 pt-10 border-t border-slate-200 dark:border-slate-800">
+            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Internal Releases</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <a href="../V1/" class="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 hover:border-blue-500 transition">
+                    v1.0 Basic Tracker
+                </a>
+                <a href="../" class="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 hover:border-blue-500 transition">
+                    v2.0 Analytics Base
+                </a>
+                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 text-[10px] font-bold text-blue-600">
+                    v6.0 Ultimate (Current)
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let state = { files: [], total: 0 };
+        const statuses = ['validate-start', 'validated', 'upload-start', 'upload-completed'];
+
+        window.onload = () => {
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').innerText = '☀️';
+            }
+            
+            const saved = localStorage.getItem('fileFlowUltimate_v6');
+            if (saved) {
+                state = JSON.parse(saved);
+                showApp();
+            } else {
+                showSetup();
+            }
+        };
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
+        }
+
+        function showSetup() {
+            document.getElementById('setupView').classList.remove('hidden');
+            document.getElementById('appView').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('setupView').classList.add('hidden');
+            document.getElementById('appView').classList.remove('hidden');
+            renderList();
+        }
+
+        function initializeProject() {
+            const start = parseInt(document.getElementById('rangeStart').value);
+            const end = parseInt(document.getElementById('rangeEnd').value);
+            
+            if (isNaN(start) || isNaN(end) || end < start) {
+                alert("Invalid range. End must be greater than Start.");
+                return;
+            }
+
+            state.total = (end - start) + 1;
+            state.files = [];
+            for(let i = start; i <= end; i++) {
+                state.files.push({
+                    id: i,
+                    name: `File_${String(i).padStart(3, '0')}`,
+                    status: 'validate-start',
+                    t_val_start: null, t_val_end: null,
+                    t_up_start: null, t_up_end: null,
+                    dur_val: 0, dur_up: 0
+                });
+            }
+            saveAndRender();
+            showApp();
+        }
+
+        function updateStatus(id, newStatus) {
+            const file = state.files.find(f => f.id === id);
+            if (!file) return;
+            const now = Date.now();
+            
+            if (newStatus === 'validate-start') file.t_val_start = now;
+            else if (newStatus === 'validated') {
+                file.t_val_end = now;
+                if (file.t_val_start) file.dur_val = now - file.t_val_start;
+            } else if (newStatus === 'upload-start') {
+                file.t_up_start = now;
+            } else if (newStatus === 'upload-completed') {
+                file.t_up_end = now;
+                if (file.t_up_start) file.dur_up = now - file.t_up_start;
+            }
+            
+            file.status = newStatus;
+            saveAndRender();
+        }
+
+        function renderList() {
+            const container = document.getElementById('fileListContainer');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            container.innerHTML = '';
+
+            let totalVal = 0, vCount = 0, totalUp = 0, uCount = 0, done = 0;
+
+            state.files.forEach(file => {
+                if (file.status === 'upload-completed') done++;
+                if (file.dur_val > 0) { totalVal += file.dur_val; vCount++; }
+                if (file.dur_up > 0) { totalUp += file.dur_up; uCount++; }
+
+                if (file.name.toLowerCase().includes(searchTerm)) {
+                    const row = document.createElement('div');
+                    row.className = `bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all`;
+                    
+                    row.innerHTML = `
+                        <div class="flex items-center gap-3">
+                            <span class="text-[10px] font-black text-slate-300 dark:text-slate-600 font-mono">ID:${file.id}</span>
+                            <span class="font-bold text-slate-800 dark:text-slate-200">${file.name}</span>
+                        </div>
+                        
+                        <div class="flex btn-container gap-1 overflow-x-auto">
+                            ${statuses.map(s => `
+                                <button onclick="updateStatus(${file.id}, '${s}')" 
+                                    class="status-btn ${file.status === s ? getActiveColor(s) : 'bg-transparent border-slate-100 dark:border-slate-800 text-slate-400'}">
+                                    ${s.replace('-', ' ')}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                    container.appendChild(row);
+                }
+            });
+
+            const valStr = vCount > 0 ? (totalVal/vCount/1000).toFixed(1) + 's' : '0s';
+            const upStr = uCount > 0 ? (totalUp/uCount/1000).toFixed(1) + 's' : '0s';
+            
+            document.getElementById('avg-val').innerText = valStr;
+            document.getElementById('avg-val-m').innerText = valStr;
+            document.getElementById('avg-up').innerText = upStr;
+            document.getElementById('avg-up-m').innerText = upStr;
+
+            const percent = Math.round((done / state.total) * 100) || 0;
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').innerText = percent + '%';
+        }
+
+        function getActiveColor(s) {
+            if (s === 'validate-start') return 'bg-amber-100 border-amber-500 text-amber-700 dark:bg-amber-900/20';
+            if (s === 'validated') return 'bg-amber-500 border-amber-500 text-white';
+            if (s === 'upload-start') return 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-900/20';
+            if (s === 'upload-completed') return 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20';
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('fileFlowUltimate_v6', JSON.stringify(state));
+            renderList();
+        }
+
+        function exportData() {
+            let csv = "ID,Name,Status,Val_Time,Up_Time\n";
+            state.files.forEach(f => csv += `${f.id},${f.name},${f.status},${(f.dur_val/1000).toFixed(2)},${(f.dur_up/1000).toFixed(2)}\n`);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `Report_${Date.now()}.csv`; a.click();
+        }
+
+        function resetApp() {
+            if (confirm("Reset current sequence?")) {
+                localStorage.removeItem('fileFlowUltimate_v6');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
