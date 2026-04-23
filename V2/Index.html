@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Flow Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .status-not-started { border-left: 6px solid #9ca3af; }
+        .status-validating { border-left: 6px solid #f59e0b; }
+        .status-uploading { border-left: 6px solid #3b82f6; }
+        .status-uploaded { border-left: 6px solid #10b981; }
+        .progress-transition { transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-900 pb-20">
+
+    <div class="max-w-6xl mx-auto p-4 md:p-8">
+        <header class="flex flex-wrap justify-between items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-4xl font-black tracking-tight text-slate-800">File Flow <span class="text-blue-600">Analytics</span></h1>
+                <p class="text-slate-500">Tracking performance from File 0.</p>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="exportData()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-50 transition shadow-sm">
+                    Export CSV
+                </button>
+                <button onclick="resetApp()" class="bg-red-50 text-red-500 px-4 py-2 rounded-lg text-sm font-bold hover:bg-red-100 transition">
+                    Reset
+                </button>
+            </div>
+        </header>
+
+        <div id="setupView" class="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-12 text-center max-w-xl mx-auto hidden">
+            <h2 class="text-2xl font-bold mb-2">Initialize Batch</h2>
+            <p class="text-slate-400 mb-6">Enter total files (Starts from index 0).</p>
+            <input type="number" id="fileInputCount" value="5" class="w-24 text-3xl font-bold text-center border-b-4 border-blue-500 outline-none mb-8">
+            <button onclick="initializeProject()" class="block w-full bg-blue-600 text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-100 hover:scale-[1.02] active:scale-95 transition-all">
+                Start Tracking
+            </button>
+        </div>
+
+        <div id="appView" class="hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-black uppercase text-slate-400 tracking-widest">Global Progress</span>
+                        <h2 id="progressText" class="text-4xl font-black text-slate-800">0%</h2>
+                    </div>
+                    <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                        <div id="progressBar" class="h-full bg-blue-600 progress-transition" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <div class="bg-blue-600 rounded-2xl p-6 shadow-lg shadow-blue-100 text-white">
+                    <span class="text-xs font-bold uppercase opacity-80 tracking-widest">Average Speeds</span>
+                    <div class="mt-4 space-y-2">
+                        <div class="flex justify-between border-b border-blue-400 pb-2">
+                            <span class="text-sm">Validation</span>
+                            <span id="avg-val" class="font-mono font-bold">0s</span>
+                        </div>
+                        <div class="flex justify-between pt-2">
+                            <span class="text-sm">Uploading</span>
+                            <span id="avg-up" class="font-mono font-bold">0s</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="fileListContainer" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <script>
+        let state = { files: [], total: 0 };
+
+        window.onload = () => {
+            const saved = localStorage.getItem('fileFlowAnalytics_v4');
+            if (saved) {
+                state = JSON.parse(saved);
+                showApp();
+            } else {
+                showSetup();
+            }
+        };
+
+        function showSetup() {
+            document.getElementById('setupView').classList.remove('hidden');
+            document.getElementById('appView').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('setupView').classList.add('hidden');
+            document.getElementById('appView').classList.remove('hidden');
+            renderList();
+        }
+
+        function initializeProject() {
+            const count = parseInt(document.getElementById('fileInputCount').value);
+            if (isNaN(count) || count < 1) return;
+            state.total = count;
+            state.files = Array.from({ length: count }, (_, i) => ({
+                id: i, // Starts from 0
+                name: `File_${String(i).padStart(3, '0')}`,
+                status: 'not-started',
+                timestamps: { validating: null, uploading: null, uploaded: null },
+                durations: { validation: 0, uploading: 0 }
+            }));
+            saveAndRender();
+            showApp();
+        }
+
+        function updateStatus(id, newStatus) {
+            const file = state.files.find(f => f.id === id);
+            if (!file) return;
+
+            const now = Date.now();
+            const oldStatus = file.status;
+            file.status = newStatus;
+
+            // Timeline Logic
+            if (newStatus === 'validating') {
+                file.timestamps.validating = now;
+            } else if (newStatus === 'uploading') {
+                file.timestamps.uploading = now;
+                if (file.timestamps.validating) {
+                    file.durations.validation = now - file.timestamps.validating;
+                }
+            } else if (newStatus === 'uploaded') {
+                file.timestamps.uploaded = now;
+                if (file.timestamps.uploading) {
+                    file.durations.uploading = now - file.timestamps.uploading;
+                }
+            }
+            
+            saveAndRender();
+        }
+
+        function renderList() {
+            const container = document.getElementById('fileListContainer');
+            container.innerHTML = '';
+
+            let totalValTime = 0, valCount = 0;
+            let totalUpTime = 0, upCount = 0;
+            let uploadedCount = 0;
+
+            state.files.forEach(file => {
+                if (file.status === 'uploaded') uploadedCount++;
+                
+                // Average calculation logic
+                if (file.durations.validation > 0) {
+                    totalValTime += file.durations.validation;
+                    valCount++;
+                }
+                if (file.durations.uploading > 0) {
+                    totalUpTime += file.durations.uploading;
+                    upCount++;
+                }
+
+                const row = document.createElement('div');
+                row.className = `bg-white p-4 md:px-8 rounded-2xl shadow-sm border border-slate-100 flex flex-wrap items-center justify-between gap-4 status-${file.status}`;
+                
+                row.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <span class="text-[10px] font-bold text-slate-300 font-mono">ID: ${file.id}</span>
+                        <span class="font-bold text-slate-700">${file.name}</span>
+                    </div>
+                    
+                    <div class="flex flex-wrap gap-1">
+                        ${['not-started', 'validating', 'uploading', 'uploaded'].map(s => `
+                            <button onclick="updateStatus(${file.id}, '${s}')" 
+                                class="px-3 py-1.5 text-[10px] font-black uppercase rounded-lg border-2 transition-all
+                                ${file.status === s ? getStatusBtnClass(s) : 'border-slate-50 text-slate-300 hover:bg-slate-100'}">
+                                ${s.replace('-', ' ')}
+                            </button>
+                        `).join('')}
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            // Update Analytics
+            document.getElementById('avg-val').innerText = valCount > 0 ? (totalValTime / valCount / 1000).toFixed(1) + 's' : '0s';
+            document.getElementById('avg-up').innerText = upCount > 0 ? (totalUpTime / upCount / 1000).toFixed(1) + 's' : '0s';
+
+            // Update Progress
+            const percent = Math.round((uploadedCount / state.total) * 100) || 0;
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').innerText = percent + '%';
+        }
+
+        function getStatusBtnClass(s) {
+            if (s === 'not-started') return 'bg-slate-500 border-slate-500 text-white shadow-lg shadow-slate-100';
+            if (s === 'validating') return 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-100';
+            if (s === 'uploading') return 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-100';
+            if (s === 'uploaded') return 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-100';
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('fileFlowAnalytics_v4', JSON.stringify(state));
+            renderList();
+        }
+
+        function exportData() {
+            let csv = "ID,Name,Status,Validation_Duration_Sec,Upload_Duration_Sec\n";
+            state.files.forEach(f => {
+                csv += `${f.id},${f.name},${f.status},${(f.durations.validation/1000).toFixed(2)},${(f.durations.uploading/1000).toFixed(2)}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `workflow_report_${new Date().toLocaleDateString()}.csv`;
+            a.click();
+        }
+
+        function resetApp() {
+            if (confirm("Reset will wipe all analytics and file data. Proceed?")) {
+                localStorage.removeItem('fileFlowAnalytics_v4');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
