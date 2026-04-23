@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Flow Premium | Analytics</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                }
+            }
+        }
+    </script>
+    <style>
+        body { transition: background-color 0.3s ease, color 0.3s ease; }
+        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); }
+        .dark .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); }
+        .status-not-started { border-left: 5px solid #94a3b8; }
+        .status-validating { border-left: 5px solid #f59e0b; }
+        .status-uploading { border-left: 5px solid #3b82f6; }
+        .status-uploaded { border-left: 5px solid #10b981; }
+        .progress-glow { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 min-h-screen">
+
+    <div class="max-w-5xl mx-auto p-6 md:p-12">
+        <header class="flex flex-wrap justify-between items-center gap-6 mb-12">
+            <div>
+                <h1 class="text-5xl font-extrabold tracking-tighter italic">FILE<span class="text-blue-600 dark:text-blue-400">FLOW</span></h1>
+                <p class="text-slate-500 dark:text-slate-400 font-medium">Precision Performance Tracking</p>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button onclick="toggleDarkMode()" class="p-3 rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-200 dark:border-slate-700 hover:scale-110 transition-all">
+                    <span id="theme-icon" class="text-xl">🌙</span>
+                </button>
+                <button onclick="exportData()" class="px-5 py-3 rounded-2xl bg-slate-900 dark:bg-white dark:text-slate-950 text-white font-bold text-sm shadow-xl hover:opacity-90 transition">
+                    Export CSV
+                </button>
+                <button onclick="resetApp()" class="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-2xl transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <div id="setupView" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[2.5rem] p-12 text-center shadow-2xl max-w-lg mx-auto hidden">
+            <h2 class="text-3xl font-black mb-4">Initialize Batch</h2>
+            <p class="text-slate-400 mb-8">Ready to track? Enter the number of files (starts at ID 0).</p>
+            <div class="flex flex-col items-center gap-6">
+                <input type="number" id="fileInputCount" value="10" class="w-32 text-center text-4xl font-black bg-transparent border-b-4 border-blue-500 focus:outline-none mb-4">
+                <button onclick="initializeProject()" class="w-full py-5 rounded-3xl bg-blue-600 text-white font-black text-lg hover:bg-blue-700 shadow-2xl shadow-blue-500/20 transition-all">
+                    Generate Workflow
+                </button>
+            </div>
+        </div>
+
+        <div id="appView" class="hidden space-y-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="md:col-span-2 glass dark:glass border border-slate-200 dark:border-slate-800 rounded-[2rem] p-8 shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Total Completion</h3>
+                        <span id="progressText" class="text-4xl font-black text-emerald-500">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-800 h-4 rounded-full overflow-hidden">
+                        <div id="progressBar" class="h-full bg-gradient-to-r from-blue-600 to-emerald-500 transition-all duration-700 ease-out" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 dark:bg-blue-600 rounded-[2rem] p-8 text-white shadow-2xl">
+                    <h3 class="text-xs font-bold uppercase tracking-widest opacity-70 mb-4">AVG Performance</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between items-center border-b border-white/10 pb-2">
+                            <span class="text-sm opacity-80 italic">Validation</span>
+                            <span id="avg-val" class="text-2xl font-black">0s</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm opacity-80 italic">Uploading</span>
+                            <span id="avg-up" class="text-2xl font-black">0s</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="relative group">
+                <input type="text" id="searchInput" oninput="renderList()" placeholder="Quick search..." 
+                    class="w-full glass dark:glass p-5 pl-12 rounded-2xl border border-slate-200 dark:border-slate-800 focus:ring-4 ring-blue-500/10 outline-none shadow-sm transition-all">
+                <svg class="w-6 h-6 absolute left-4 top-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <div id="fileListContainer" class="space-y-4"></div>
+        </div>
+    </div>
+
+    <script>
+        let state = { files: [], total: 0 };
+
+        window.onload = () => {
+            // Load Theme
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').innerText = '☀️';
+            }
+            
+            const saved = localStorage.getItem('fileFlowPremium_v5');
+            if (saved) {
+                state = JSON.parse(saved);
+                showApp();
+            } else {
+                showSetup();
+            }
+        };
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.theme = isDark ? 'dark' : 'light';
+            document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
+        }
+
+        function showSetup() {
+            document.getElementById('setupView').classList.remove('hidden');
+            document.getElementById('appView').classList.add('hidden');
+        }
+
+        function showApp() {
+            document.getElementById('setupView').classList.add('hidden');
+            document.getElementById('appView').classList.remove('hidden');
+            renderList();
+        }
+
+        function initializeProject() {
+            const count = parseInt(document.getElementById('fileInputCount').value);
+            if (isNaN(count) || count < 1) return;
+            state.total = count;
+            state.files = Array.from({ length: count }, (_, i) => ({
+                id: i,
+                name: `File_${String(i).padStart(3, '0')}`,
+                status: 'not-started',
+                timestamps: { validating: null, uploading: null, uploaded: null },
+                durations: { validation: 0, uploading: 0 }
+            }));
+            saveAndRender();
+            showApp();
+        }
+
+        function updateStatus(id, newStatus) {
+            const file = state.files.find(f => f.id === id);
+            if (!file) return;
+            const now = Date.now();
+            
+            if (newStatus === 'validating') file.timestamps.validating = now;
+            else if (newStatus === 'uploading') {
+                file.timestamps.uploading = now;
+                if (file.timestamps.validating) file.durations.validation = now - file.timestamps.validating;
+            } else if (newStatus === 'uploaded') {
+                file.timestamps.uploaded = now;
+                if (file.timestamps.uploading) file.durations.uploading = now - file.timestamps.uploading;
+            }
+            
+            file.status = newStatus;
+            saveAndRender();
+        }
+
+        function saveAndRender() {
+            localStorage.setItem('fileFlowPremium_v5', JSON.stringify(state));
+            renderList();
+        }
+
+        function renderList() {
+            const container = document.getElementById('fileListContainer');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            container.innerHTML = '';
+
+            let totalValTime = 0, valCount = 0, totalUpTime = 0, upCount = 0, uploadedCount = 0;
+
+            state.files.forEach(file => {
+                if (file.status === 'uploaded') uploadedCount++;
+                if (file.durations.validation > 0) { totalValTime += file.durations.validation; valCount++; }
+                if (file.durations.uploading > 0) { totalUpTime += file.durations.uploading; upCount++; }
+
+                if (file.name.toLowerCase().includes(searchTerm)) {
+                    const row = document.createElement('div');
+                    row.className = `glass dark:glass p-6 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-4 status-${file.status} hover:shadow-lg transition-all duration-300`;
+                    
+                    row.innerHTML = `
+                        <div class="flex items-center gap-5">
+                            <span class="text-[10px] font-black text-slate-300 dark:text-slate-600 font-mono tracking-tighter">#${file.id}</span>
+                            <span class="font-bold text-lg text-slate-800 dark:text-slate-100">${file.name}</span>
+                        </div>
+                        
+                        <div class="flex gap-1 overflow-x-auto pb-1 md:pb-0">
+                            ${['not-started', 'validating', 'uploading', 'uploaded'].map(s => `
+                                <button onclick="updateStatus(${file.id}, '${s}')" 
+                                    class="px-4 py-2 text-[10px] font-black uppercase rounded-xl border-2 transition-all whitespace-nowrap
+                                    ${file.status === s ? getStatusClass(s) : 'border-transparent text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}">
+                                    ${s.replace('-', ' ')}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                    container.appendChild(row);
+                }
+            });
+
+            document.getElementById('avg-val').innerText = valCount > 0 ? (totalValTime / valCount / 1000).toFixed(1) + 's' : '0s';
+            document.getElementById('avg-up').innerText = upCount > 0 ? (totalUpTime / upCount / 1000).toFixed(1) + 's' : '0s';
+            const percent = Math.round((uploadedCount / state.total) * 100) || 0;
+            document.getElementById('progressBar').style.width = percent + '%';
+            document.getElementById('progressText').innerText = percent + '%';
+        }
+
+        function getStatusClass(s) {
+            if (s === 'not-started') return 'bg-slate-500 border-slate-500 text-white shadow-lg';
+            if (s === 'validating') return 'bg-amber-500 border-amber-500 text-white shadow-lg';
+            if (s === 'uploading') return 'bg-blue-600 border-blue-600 text-white shadow-lg';
+            if (s === 'uploaded') return 'bg-emerald-500 border-emerald-500 text-white shadow-lg progress-glow';
+        }
+
+        function exportData() {
+            let csv = "ID,Name,Status,Validation_Sec,Upload_Sec\n";
+            state.files.forEach(f => csv += `${f.id},${f.name},${f.status},${(f.durations.validation/1000).toFixed(2)},${(f.durations.uploading/1000).toFixed(2)}\n`);
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `Batch_Report_${new Date().toLocaleDateString()}.csv`;
+            a.click();
+        }
+
+        function resetApp() {
+            if (confirm("This will permanently delete all batch data and times. Continue?")) {
+                localStorage.removeItem('fileFlowPremium_v5');
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
