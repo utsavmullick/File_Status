@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Flow | Premium Workspace</title>
+    <title>File Flow | Time Critical Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -22,42 +22,43 @@
     <style>
         .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
         .dark .glass-panel { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
-        
-        /* Premium custom select styling */
         select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         select option { background-color: #ffffff; color: #1d1d1f; font-weight: 500; }
         .dark select option { background-color: #1e293b; color: #f5f5f7; }
-        
-        /* Smooth transitions for text */
         .name-transition { transition: color 0.3s ease, text-decoration-color 0.3s ease; }
+        .pulse-red { animation: pulseRed 2s infinite; }
+        @keyframes pulseRed { 0% { color: #ef4444; } 50% { color: #991b1b; } 100% { color: #ef4444; } }
     </style>
 </head>
 <body class="bg-[#f5f5f7] dark:bg-[#000000] text-[#1d1d1f] dark:text-[#f5f5f7] min-h-screen selection:bg-blue-500/30 antialiased">
 
-    <div class="max-w-4xl mx-auto p-4 md:p-10 pb-20">
-        <header class="flex justify-between items-center mb-10">
+    <div class="max-w-5xl mx-auto p-4 md:p-10 pb-20">
+        <header class="flex flex-wrap justify-between items-center gap-4 mb-10">
             <div>
                 <h1 class="text-3xl md:text-4xl font-bold tracking-tight">FILEFLOW</h1>
-                <p class="text-[11px] font-medium text-slate-500 uppercase tracking-widest mt-1">Current Workspace</p>
+                <p class="text-[11px] font-medium text-slate-500 uppercase tracking-widest mt-1">Time Critical Workspace</p>
             </div>
-            <div class="flex gap-3">
+            <div class="flex flex-wrap gap-3 items-center">
+                <span id="copyToast" class="text-xs font-bold text-emerald-500 opacity-0 transition-opacity">Copied to Clipboard!</span>
+                <button onclick="copyData()" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full font-semibold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 shadow-sm transition-transform active:scale-95">
+                    Copy Data
+                </button>
+                <button onclick="exportData()" class="px-5 py-2 bg-blue-600 text-white rounded-full font-semibold text-sm hover:bg-blue-700 shadow-sm transition-transform active:scale-95">
+                    Export CSV
+                </button>
                 <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
                     <span id="theme-icon" class="text-sm">🌙</span>
-                </button>
-                <button onclick="exportData()" class="px-5 py-2 bg-blue-600 text-white rounded-full font-semibold text-sm hover:bg-blue-700 shadow-sm transition-transform hover:scale-105 active:scale-95">
-                    Export
                 </button>
             </div>
         </header>
 
         <div id="setupView" class="glass-panel rounded-3xl p-8 md:p-10 border border-white dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)] mb-10 hidden">
-            <h2 class="text-xl font-semibold mb-6">Initialize Batch Range</h2>
-            <div class="grid grid-cols-2 gap-6 mb-8">
+            <h2 class="text-xl font-semibold mb-6">Initialize Batch & Deadline</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">From File No.</label>
                     <div class="relative">
-                        <select id="rangeStart" class="w-full bg-slate-100/80 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/10 outline-none font-mono text-xl transition-all cursor-pointer pr-10">
-                            </select>
+                        <select id="rangeStart" class="w-full bg-slate-100/80 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/10 outline-none font-mono text-xl transition-all cursor-pointer pr-10"></select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
@@ -66,20 +67,32 @@
                 <div>
                     <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">To File No.</label>
                     <div class="relative">
-                        <select id="rangeEnd" class="w-full bg-slate-100/80 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/10 outline-none font-mono text-xl transition-all cursor-pointer pr-10">
-                            </select>
+                        <select id="rangeEnd" class="w-full bg-slate-100/80 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/10 outline-none font-mono text-xl transition-all cursor-pointer pr-10"></select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                         </div>
                     </div>
                 </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Target Deadline (Today)</label>
+                    <input type="time" id="deadlineTime" class="w-full bg-slate-100/80 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/10 outline-none font-mono text-xl transition-all cursor-pointer">
+                </div>
             </div>
             <button onclick="initializeProject()" class="w-full py-4 bg-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f] text-white rounded-2xl font-semibold hover:opacity-90 transition-all active:scale-[0.98] shadow-md">
-                Generate Sequence
+                Lock in Deadline & Generate
             </button>
         </div>
 
         <div id="appView" class="hidden space-y-6">
+            
+            <div id="deadlineBanner" class="bg-slate-900 dark:bg-slate-800 text-white rounded-2xl p-4 flex justify-between items-center shadow-lg transition-colors duration-500">
+                <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-sm font-semibold uppercase tracking-wider opacity-80">Time Remaining</span>
+                </div>
+                <div id="countdownDisplay" class="text-3xl font-mono font-bold tracking-tighter">--:--:--</div>
+            </div>
+
             <div class="glass-panel rounded-3xl p-8 border border-white/50 dark:border-slate-800 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                 <div class="flex justify-between items-end mb-6">
                     <div class="space-y-1">
@@ -97,10 +110,6 @@
                 <div class="w-full bg-slate-200/50 dark:bg-slate-800/50 h-3 rounded-full overflow-hidden">
                     <div id="progressBar" class="h-full bg-blue-500 transition-all duration-1000 ease-out" style="width: 0%"></div>
                 </div>
-                <div class="md:hidden flex justify-between mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 font-mono text-[11px] font-medium text-slate-500">
-                    <span>VAL: <b id="avg-val-m" class="text-amber-500">0s</b></span>
-                    <span>UP: <b id="avg-up-m" class="text-blue-500">0s</b></span>
-                </div>
             </div>
 
             <div class="relative">
@@ -115,56 +124,128 @@
                 Wipe Current Batch Data
             </button>
         </div>
-
-        <footer class="mt-20 pt-10 border-t border-slate-200 dark:border-slate-800">
-            <h3 class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-5 text-center md:text-left">Version Archive</h3>
-            <div class="flex flex-wrap justify-center md:justify-start gap-3">
-                <a href="https://umullick.in/File_Status/V1/" class="px-4 py-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 hover:text-blue-500 hover:border-blue-500 transition-all shadow-sm hover:shadow-md">
-                    V1 Basic
-                </a>
-                <a href="https://umullick.in/File_Status/V2/" class="px-4 py-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 hover:text-blue-500 hover:border-blue-500 transition-all shadow-sm hover:shadow-md">
-                    V2 Analytics
-                </a>
-                <a href="https://umullick.in/File_Status/V3/" class="px-4 py-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 hover:text-blue-500 hover:border-blue-500 transition-all shadow-sm hover:shadow-md">
-                    V3 Pro
-                </a>
-                <a href="https://umullick.in/File_Status/V4/" class="px-4 py-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 hover:text-blue-500 hover:border-blue-500 transition-all shadow-sm hover:shadow-md">
-                    V4 Timeline
-                </a>
-                <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/30 rounded-full border border-blue-200 dark:border-blue-800 text-xs font-semibold text-blue-600 shadow-sm">
-                    Current Version
-                </div>
-            </div>
-        </footer>
     </div>
 
     <script>
-        let state = { files: [], total: 0 };
-        const statuses = ['validate-start', 'validated', 'upload-start', 'upload-completed'];
+        let state = { 
+            files: [], total: 0, 
+            deadline: null, 
+            warningsTriggered: { m30: false, m15: false, m5: false, m1: false } 
+        };
+        const statuses = ['not-yet', 'validate-start', 'validated', 'upload-start', 'upload-completed'];
+        let timerInterval;
+
+        // Audio Context Setup
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx;
 
         window.onload = () => {
-            // Theme Logic
             if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
                 document.getElementById('theme-icon').innerText = '☀️';
             }
-            
             populateDropdowns();
 
-            // Load Data
-            const saved = localStorage.getItem('fileFlowCurrent_v8');
+            const saved = localStorage.getItem('fileFlowCurrent_v10');
             if (saved) {
                 state = JSON.parse(saved);
+                if(state.deadline) startTimer();
                 showApp();
             } else {
+                // Set default time to 1 hour from now
+                const now = new Date();
+                now.setHours(now.getHours() + 1);
+                document.getElementById('deadlineTime').value = now.toTimeString().slice(0,5);
                 showSetup();
             }
         };
 
+        // --- Audio System ---
+        function initAudio() {
+            if (!audioCtx) audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'success') {
+                // Happy double chime
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.5);
+            } else if (type === 'warning') {
+                // Urgent double beep
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.2);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.start(audioCtx.currentTime);
+                osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        // --- Timer System ---
+        function startTimer() {
+            if(timerInterval) clearInterval(timerInterval);
+            timerInterval = setInterval(updateClock, 1000);
+            updateClock();
+        }
+
+        function updateClock() {
+            if(!state.deadline) return;
+            const now = Date.now();
+            const diff = state.deadline - now;
+            const display = document.getElementById('countdownDisplay');
+            const banner = document.getElementById('deadlineBanner');
+
+            if (diff <= 0) {
+                display.innerText = "00:00:00 - OVERDUE";
+                banner.className = "bg-red-600 text-white rounded-2xl p-4 flex justify-between items-center shadow-lg pulse-red";
+                return;
+            }
+
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            display.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+
+            // Warning Logic
+            const totalMins = diff / 60000;
+            if (totalMins <= 1 && !state.warningsTriggered.m1) {
+                triggerWarning('m1', 'bg-red-500');
+            } else if (totalMins <= 5 && !state.warningsTriggered.m5) {
+                triggerWarning('m5', 'bg-red-500');
+            } else if (totalMins <= 15 && !state.warningsTriggered.m15) {
+                triggerWarning('m15', 'bg-orange-500');
+            } else if (totalMins <= 30 && !state.warningsTriggered.m30) {
+                triggerWarning('m30', 'bg-amber-500 text-amber-950');
+            }
+        }
+
+        function triggerWarning(flag, colorClass) {
+            state.warningsTriggered[flag] = true;
+            playSound('warning');
+            const banner = document.getElementById('deadlineBanner');
+            banner.className = `${colorClass} rounded-2xl p-4 flex justify-between items-center shadow-lg transition-colors duration-500`;
+            saveState();
+        }
+
+        // --- Core UI Setup ---
         function populateDropdowns() {
             const startSelect = document.getElementById('rangeStart');
             const endSelect = document.getElementById('rangeEnd');
-            
             for (let i = 0; i <= 1000; i++) {
                 startSelect.add(new Option(i, i));
                 endSelect.add(new Option(i, i));
@@ -191,31 +272,51 @@
         }
 
         function initializeProject() {
+            initAudio(); // Required to unlock sound in browser
+            
             const start = parseInt(document.getElementById('rangeStart').value);
             const end = parseInt(document.getElementById('rangeEnd').value);
+            const timeVal = document.getElementById('deadlineTime').value;
             
             if (isNaN(start) || isNaN(end) || end < start) {
-                alert("Invalid range. 'To File No.' must be greater than or equal to 'From File No.'.");
-                return;
+                alert("Invalid range."); return;
+            }
+            if (!timeVal) {
+                alert("Please set a deadline time."); return;
             }
 
+            // Create Deadline Date object for today
+            const now = new Date();
+            const [hours, minutes] = timeVal.split(':');
+            const deadlineDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, 0);
+            
+            // If the time is already past today, assume tomorrow
+            if (deadlineDate.getTime() < now.getTime()) {
+                deadlineDate.setDate(deadlineDate.getDate() + 1);
+            }
+
+            state.deadline = deadlineDate.getTime();
+            state.warningsTriggered = { m30: false, m15: false, m5: false, m1: false };
             state.total = (end - start) + 1;
             state.files = [];
             for(let i = start; i <= end; i++) {
                 state.files.push({
                     id: i,
                     name: `File_${String(i).padStart(3, '0')}`,
-                    status: 'validate-start',
+                    status: 'not-yet',
                     t_val_start: null, t_val_end: null,
                     t_up_start: null, t_up_end: null,
                     dur_val: 0, dur_up: 0
                 });
             }
-            saveAndRender();
+            
+            saveState();
+            startTimer();
             showApp();
         }
 
         function updateStatus(id, newStatus) {
+            initAudio(); // Just in case it was suspended
             const file = state.files.find(f => f.id === id);
             if (!file) return;
             const now = Date.now();
@@ -229,10 +330,12 @@
             } else if (newStatus === 'upload-completed') {
                 file.t_up_end = now;
                 if (file.t_up_start) file.dur_up = now - file.t_up_start;
+                playSound('success'); // Play chime on completion!
             }
             
             file.status = newStatus;
-            saveAndRender();
+            saveState();
+            renderList();
         }
 
         function formatStatusText(s) {
@@ -256,24 +359,16 @@
                     const row = document.createElement('div');
                     row.className = `bg-white dark:bg-[#151516] p-4 md:p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-row items-center justify-between gap-4 transition-all duration-300 hover:shadow-md`;
                     
-                    // Strike-through and color logic
                     const nameClass = isCompleted 
                         ? 'font-semibold text-[15px] text-emerald-500 line-through decoration-emerald-500/50 opacity-80 name-transition'
                         : 'font-semibold text-[15px] text-slate-900 dark:text-slate-100 name-transition';
 
                     row.innerHTML = `
-                        <div class="flex items-center">
-                            <span class="${nameClass}">${file.name}</span>
-                        </div>
-                        
+                        <div class="flex items-center"><span class="${nameClass}">${file.name}</span></div>
                         <div class="relative min-w-[160px] md:min-w-[180px]">
                             <select onchange="updateStatus(${file.id}, this.value)" 
                                 class="${getDropdownStyle(file.status)} w-full appearance-none pr-8 pl-4 py-2.5 rounded-xl text-[12px] md:text-[13px] font-semibold outline-none transition-all cursor-pointer border shadow-sm">
-                                ${statuses.map(s => `
-                                    <option value="${s}" ${file.status === s ? 'selected' : ''}>
-                                        ${formatStatusText(s)}
-                                    </option>
-                                `).join('')}
+                                ${statuses.map(s => `<option value="${s}" ${file.status === s ? 'selected' : ''}>${formatStatusText(s)}</option>`).join('')}
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 ${getIconColor(file.status)}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -288,55 +383,69 @@
             const upStr = uCount > 0 ? (totalUp/uCount/1000).toFixed(1) + 's' : '0s';
             
             document.getElementById('avg-val').innerText = valStr;
-            document.getElementById('avg-val-m').innerText = valStr;
             document.getElementById('avg-up').innerText = upStr;
-            document.getElementById('avg-up-m').innerText = upStr;
 
             const percent = Math.round((done / state.total) * 100) || 0;
             document.getElementById('progressBar').style.width = percent + '%';
             document.getElementById('progressText').innerText = percent + '%';
             
-            // Turn progress text green when done
             if(percent === 100) {
                 document.getElementById('progressText').classList.replace('text-blue-500', 'text-emerald-500');
                 document.getElementById('progressBar').classList.replace('bg-blue-500', 'bg-emerald-500');
-            } else {
-                document.getElementById('progressText').classList.replace('text-emerald-500', 'text-blue-500');
-                document.getElementById('progressBar').classList.replace('bg-emerald-500', 'bg-blue-500');
+                if(timerInterval) clearInterval(timerInterval); // Stop clock on 100% completion
+                document.getElementById('deadlineBanner').className = "bg-emerald-500 text-white rounded-2xl p-4 flex justify-between items-center shadow-lg transition-colors duration-500";
+                document.getElementById('countdownDisplay').innerText = "BATCH COMPLETE";
             }
         }
 
-        // Distinct coloring for the dropdown boxes
         function getDropdownStyle(s) {
+            if (s === 'not-yet') return 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600';
             if (s === 'validate-start') return 'bg-white dark:bg-slate-800 text-amber-600 border-amber-200 dark:border-slate-700 hover:border-amber-400';
             if (s === 'validated') return 'bg-amber-500 text-white border-transparent hover:bg-amber-600';
             if (s === 'upload-start') return 'bg-white dark:bg-slate-800 text-blue-600 border-blue-200 dark:border-slate-700 hover:border-blue-400';
             if (s === 'upload-completed') return 'bg-emerald-500 text-white border-transparent hover:bg-emerald-600';
         }
 
-        // Ensure the dropdown arrow matches the text color
         function getIconColor(s) {
             if (s === 'validated' || s === 'upload-completed') return 'text-white opacity-90';
+            if (s === 'not-yet') return 'text-slate-400 dark:text-slate-500';
             if (s === 'validate-start') return 'text-amber-500';
             if (s === 'upload-start') return 'text-blue-500';
         }
 
-        function saveAndRender() {
-            localStorage.setItem('fileFlowCurrent_v8', JSON.stringify(state));
-            renderList();
+        function saveState() {
+            localStorage.setItem('fileFlowCurrent_v10', JSON.stringify(state));
+        }
+
+        // --- Export & Copy Data ---
+        function generateDataString() {
+            let str = "Name\tStatus\tVal_Time_Sec\tUp_Time_Sec\n";
+            state.files.forEach(f => {
+                str += `${f.name}\t${formatStatusText(f.status)}\t${(f.dur_val/1000).toFixed(2)}\t${(f.dur_up/1000).toFixed(2)}\n`;
+            });
+            return str;
+        }
+
+        function copyData() {
+            const data = generateDataString();
+            navigator.clipboard.writeText(data).then(() => {
+                const toast = document.getElementById('copyToast');
+                toast.classList.remove('opacity-0');
+                setTimeout(() => toast.classList.add('opacity-0'), 2000);
+            });
         }
 
         function exportData() {
             let csv = "Name,Status,Val_Time_Sec,Up_Time_Sec\n";
-            state.files.forEach(f => csv += `${f.id},${f.name},${f.status},${(f.dur_val/1000).toFixed(2)},${(f.dur_up/1000).toFixed(2)}\n`);
+            state.files.forEach(f => csv += `${f.name},${f.status},${(f.dur_val/1000).toFixed(2)},${(f.dur_up/1000).toFixed(2)}\n`);
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a'); a.href = url; a.download = `Batch_Report_${Date.now()}.csv`; a.click();
         }
 
         function resetApp() {
-            if (confirm("Reset current sequence?")) {
-                localStorage.removeItem('fileFlowCurrent_v8');
+            if (confirm("Reset current sequence and deadline?")) {
+                localStorage.removeItem('fileFlowCurrent_v10');
                 location.reload();
             }
         }
