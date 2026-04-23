@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Flow | Animated Workspace</title>
+    <title>File Flow | Liquid Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
@@ -21,12 +20,8 @@
         }
     </script>
     <style>
-        /* The shader background container */
-        #shader-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; background: #000; overflow: hidden; }
-        
-        /* Adjusted glass panels to look good over the moving background */
-        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.4); }
-        .dark .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); }
+        .glass-panel { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.4); }
+        .dark .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
         
         select { -webkit-appearance: none; -moz-appearance: none; appearance: none; }
         select option { background-color: #ffffff; color: #1d1d1f; font-weight: 500; }
@@ -34,55 +29,104 @@
         .name-transition { transition: color 0.3s ease, text-decoration-color 0.3s ease; }
         .pulse-red { animation: pulseRed 2s infinite; }
         @keyframes pulseRed { 0% { color: #ef4444; } 50% { color: #991b1b; } 100% { color: #ef4444; } }
+
+        /* --- LIQUID GLASS BUTTON CSS --- */
+        .liquid-btn {
+            position: relative;
+            background: transparent;
+            transition: transform 0.3s ease;
+        }
+        .liquid-btn:hover { transform: scale(1.05); }
+        .liquid-btn::before {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; border-radius: 9999px; z-index: -1;
+            box-shadow: 0 0 6px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3px rgba(0,0,0,0.9), inset -3px -3px 0.5px -3px rgba(0,0,0,0.85), inset 1px 1px 1px -0.5px rgba(0,0,0,0.6), inset -1px -1px 1px -0.5px rgba(0,0,0,0.6), inset 0 0 6px 6px rgba(0,0,0,0.12), inset 0 0 2px 2px rgba(0,0,0,0.06), 0 0 12px rgba(255,255,255,0.15);
+            transition: all 0.3s ease;
+        }
+        .dark .liquid-btn::before {
+            box-shadow: 0 0 8px rgba(0,0,0,0.03), 0 2px 6px rgba(0,0,0,0.08), inset 3px 3px 0.5px -3.5px rgba(255,255,255,0.09), inset -3px -3px 0.5px -3.5px rgba(255,255,255,0.85), inset 1px 1px 1px -0.5px rgba(255,255,255,0.6), inset -1px -1px 1px -0.5px rgba(255,255,255,0.6), inset 0 0 6px 6px rgba(255,255,255,0.12), inset 0 0 2px 2px rgba(255,255,255,0.06), 0 0 12px rgba(0,0,0,0.15);
+        }
+
+        /* --- METAL BUTTON (PRIMARY) CSS --- */
+        .metal-wrapper {
+            position: relative; display: inline-flex; border-radius: 0.5rem; padding: 1.25px;
+            background: linear-gradient(to bottom, #000, #A0A0A0);
+            transition: all 250ms cubic-bezier(0.1, 0.4, 0.2, 1);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        }
+        .metal-wrapper:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); transform: translateY(-1px); }
+        .metal-wrapper:active { box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15); transform: translateY(2.5px) scale(0.99); }
+        
+        .metal-inner {
+            position: absolute; inset: 1px; border-radius: 0.4rem;
+            background: linear-gradient(to bottom, #3b82f6, #1e40af, #0f172a);
+        }
+        .metal-btn {
+            position: relative; z-index: 10; margin: 1px; border-radius: 0.375rem; width: 100%;
+            background: linear-gradient(to bottom, #2563eb, rgba(37, 99, 235, 0.4));
+            color: white; text-shadow: 0 -1px 0 rgba(30, 58, 138, 1);
+            padding: 1rem; font-weight: 700;
+        }
     </style>
 </head>
-<body class="bg-transparent text-[#1d1d1f] dark:text-[#f5f5f7] min-h-screen selection:bg-blue-500/30 antialiased">
+<body class="bg-[#f5f5f7] dark:bg-[#0f172a] text-[#1d1d1f] dark:text-[#f5f5f7] min-h-screen selection:bg-blue-500/30 antialiased">
 
-    <div id="shader-bg"></div>
+    <svg class="hidden">
+        <defs>
+            <filter id="container-glass" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
+                <feTurbulence type="fractalNoise" baseFrequency="0.05 0.05" numOctaves="1" seed="1" result="turbulence" />
+                <feGaussianBlur in="turbulence" stdDeviation="2" result="blurredNoise" />
+                <feDisplacementMap in="SourceGraphic" in2="blurredNoise" scale="70" xChannelSelector="R" yChannelSelector="B" result="displaced" />
+                <feGaussianBlur in="displaced" stdDeviation="4" result="finalBlur" />
+                <feComposite in="finalBlur" in2="finalBlur" operator="over" />
+            </filter>
+        </defs>
+    </svg>
 
     <div class="max-w-5xl mx-auto p-4 md:p-10 pb-20 relative z-10">
         <header class="flex flex-wrap justify-between items-center gap-4 mb-10">
             <div>
-                <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white dark:text-white drop-shadow-md">FILEFLOW</h1>
-                <p class="text-[11px] font-bold text-slate-200 uppercase tracking-widest mt-1 drop-shadow-md">Time Critical Workspace</p>
+                <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-slate-900 dark:text-white">FILEFLOW</h1>
+                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-1">Liquid Workspace</p>
             </div>
-            <div class="flex flex-wrap gap-3 items-center">
-                <span id="copyToast" class="text-xs font-bold text-emerald-400 opacity-0 transition-opacity">Copied!</span>
-                <button onclick="copyData()" class="px-4 py-2 glass-panel rounded-full font-semibold text-sm hover:scale-105 shadow-sm transition-transform active:scale-95 text-slate-900 dark:text-white">
+            <div class="flex flex-wrap gap-4 items-center">
+                <span id="copyToast" class="text-xs font-bold text-emerald-500 opacity-0 transition-opacity">Copied!</span>
+                
+                <button onclick="copyData()" class="liquid-btn px-6 py-2 rounded-full font-bold text-sm text-slate-700 dark:text-slate-200">
                     Copy Data
                 </button>
-                <button onclick="exportData()" class="px-5 py-2 bg-blue-600/90 backdrop-blur-md text-white rounded-full font-semibold text-sm hover:bg-blue-700 shadow-sm transition-transform active:scale-95">
+                <button onclick="exportData()" class="liquid-btn px-6 py-2 rounded-full font-bold text-sm text-blue-600 dark:text-blue-400">
                     Export CSV
                 </button>
-                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full glass-panel shadow-sm flex items-center justify-center transition-transform hover:scale-105 active:scale-95">
+                <button onclick="toggleDarkMode()" class="liquid-btn w-10 h-10 rounded-full flex items-center justify-center">
                     <span id="theme-icon" class="text-sm">🌙</span>
                 </button>
             </div>
         </header>
 
-        <div id="setupView" class="glass-panel rounded-3xl p-8 md:p-10 shadow-2xl mb-10 hidden">
+        <div id="setupView" class="glass-panel rounded-3xl p-8 md:p-10 shadow-2xl mb-10 hidden" style="backdrop-filter: url('#container-glass');">
             <h2 class="text-xl font-semibold mb-6">Initialize Batch & Deadline</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-2">From File No.</label>
-                    <div class="relative">
-                        <select id="rangeStart" class="w-full bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/20 outline-none font-mono text-xl transition-all cursor-pointer pr-10"></select>
-                    </div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">From File No.</label>
+                    <select id="rangeStart" class="w-full bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:ring-4 ring-blue-500/20 outline-none font-mono text-xl cursor-pointer"></select>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-2">To File No.</label>
-                    <div class="relative">
-                        <select id="rangeEnd" class="w-full bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/20 outline-none font-mono text-xl transition-all cursor-pointer pr-10"></select>
-                    </div>
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">To File No.</label>
+                    <select id="rangeEnd" class="w-full bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:ring-4 ring-blue-500/20 outline-none font-mono text-xl cursor-pointer"></select>
                 </div>
                 <div>
-                    <label class="block text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-2">Target Deadline</label>
-                    <input type="time" id="deadlineTime" class="w-full bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/20 outline-none font-mono text-xl transition-all cursor-pointer">
+                    <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Target Deadline</label>
+                    <input type="time" id="deadlineTime" class="w-full bg-white/50 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:ring-4 ring-blue-500/20 outline-none font-mono text-xl cursor-pointer">
                 </div>
             </div>
-            <button onclick="initializeProject()" class="w-full py-4 bg-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f] text-white rounded-2xl font-bold hover:opacity-90 transition-all active:scale-[0.98] shadow-xl">
-                Lock in Deadline & Generate
-            </button>
+            
+            <div class="w-full flex justify-center mt-6">
+                <div class="metal-wrapper w-full cursor-pointer" onclick="initializeProject()">
+                    <div class="metal-inner"></div>
+                    <button class="metal-btn">Lock in Deadline & Generate</button>
+                </div>
+            </div>
         </div>
 
         <div id="appView" class="hidden space-y-6">
@@ -99,113 +143,33 @@
                 <div class="flex justify-between items-end mb-6">
                     <div class="space-y-1">
                         <span id="progressText" class="text-5xl font-bold tracking-tight text-blue-600 dark:text-blue-400">0%</span>
-                        <p class="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider">Global Completion</p>
+                        <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Global Completion</p>
                     </div>
                     <div class="text-right hidden md:block">
-                        <p class="text-[11px] font-bold text-slate-500 dark:text-slate-300 uppercase tracking-wider mb-2">Avg Lead Times</p>
+                        <p class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">Avg Lead Times</p>
                         <div class="flex gap-4 text-sm font-mono font-bold bg-white/50 dark:bg-slate-900/50 px-4 py-2 rounded-xl">
                             <div class="text-amber-600 dark:text-amber-400">VAL: <span id="avg-val">0s</span></div>
                             <div class="text-blue-600 dark:text-blue-400">UP: <span id="avg-up">0s</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="w-full bg-white/30 dark:bg-slate-900/50 h-3 rounded-full overflow-hidden backdrop-blur-md">
+                <div class="w-full bg-slate-200 dark:bg-slate-800 h-3 rounded-full overflow-hidden shadow-inner">
                     <div id="progressBar" class="h-full bg-blue-500 transition-all duration-1000 ease-out" style="width: 0%"></div>
                 </div>
             </div>
 
-            <div class="relative">
-                <input type="text" id="searchInput" oninput="renderList()" placeholder="Search files..." 
-                    class="w-full glass-panel py-4 pl-12 pr-4 rounded-2xl focus:ring-4 ring-blue-500/20 outline-none shadow-lg transition-all text-sm font-semibold placeholder-slate-500 dark:placeholder-slate-400">
-            </div>
+            <input type="text" id="searchInput" oninput="renderList()" placeholder="Search files..." 
+                class="w-full glass-panel py-4 px-6 rounded-2xl focus:ring-4 ring-blue-500/20 outline-none shadow-lg transition-all text-sm font-semibold">
 
             <div id="fileListContainer" class="space-y-3"></div>
 
-            <button onclick="resetApp()" class="w-full py-4 text-[13px] font-bold text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-2xl transition-colors mt-6 backdrop-blur-md border border-red-500/20">
+            <button onclick="resetApp()" class="w-full py-4 text-[13px] font-bold text-red-500 bg-red-500/10 hover:bg-red-500/20 rounded-2xl transition-colors mt-6 border border-red-500/20">
                 Wipe Current Batch Data
             </button>
         </div>
     </div>
 
     <script>
-        // --- THREE.JS SHADER ANIMATION INTEGRATION ---
-        function initShaderAnimation() {
-            const container = document.getElementById('shader-bg');
-            
-            const vertexShader = `
-                void main() {
-                    gl_Position = vec4( position, 1.0 );
-                }
-            `;
-
-            const fragmentShader = `
-                #define TWO_PI 6.2831853072
-                #define PI 3.14159265359
-                precision highp float;
-                uniform vec2 resolution;
-                uniform float time;
-
-                void main(void) {
-                    vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
-                    float t = time*0.05;
-                    float lineWidth = 0.002;
-                    vec3 color = vec3(0.0);
-                    
-                    for(int j = 0; j < 3; j++){
-                        for(int i=0; i < 5; i++){
-                            color[j] += lineWidth*float(i*i) / abs(fract(t - 0.01*float(j)+float(i)*0.01)*5.0 - length(uv) + mod(uv.x+uv.y, 0.2));
-                        }
-                    }
-                    gl_FragColor = vec4(color[0],color[1],color[2],1.0);
-                }
-            `;
-
-            const camera = new THREE.Camera();
-            camera.position.z = 1;
-            const scene = new THREE.Scene();
-            const geometry = new THREE.PlaneGeometry(2, 2);
-
-            const uniforms = {
-                time: { type: "f", value: 1.0 },
-                resolution: { type: "v2", value: new THREE.Vector2() },
-            };
-
-            const material = new THREE.ShaderMaterial({
-                uniforms: uniforms,
-                vertexShader: vertexShader,
-                fragmentShader: fragmentShader,
-            });
-
-            const mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(window.devicePixelRatio);
-            container.appendChild(renderer.domElement);
-
-            const onWindowResize = () => {
-                const width = window.innerWidth;
-                const height = window.innerHeight;
-                renderer.setSize(width, height);
-                uniforms.resolution.value.x = renderer.domElement.width;
-                uniforms.resolution.value.y = renderer.domElement.height;
-            };
-
-            onWindowResize();
-            window.addEventListener("resize", onWindowResize, false);
-
-            const animate = () => {
-                requestAnimationFrame(animate);
-                uniforms.time.value += 0.05;
-                renderer.render(scene, camera);
-            };
-            animate();
-        }
-
-        // Initialize Shader immediately
-        initShaderAnimation();
-
-        // --- CORE APPLICATION LOGIC (V10 Features) ---
         let state = { files: [], total: 0, deadline: null, warningsTriggered: { m30: false, m15: false, m5: false, m1: false } };
         const statuses = ['not-yet', 'validate-start', 'validated', 'upload-start', 'upload-completed'];
         let timerInterval;
@@ -213,17 +177,18 @@
         let audioCtx;
 
         window.onload = () => {
-            document.documentElement.classList.add('dark'); // Force dark mode for shader visibility
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('theme-icon').innerText = '☀️';
+            }
             populateDropdowns();
-
-            const saved = localStorage.getItem('fileFlowCurrent_v11');
+            const saved = localStorage.getItem('fileFlowCurrent_v12');
             if (saved) {
                 state = JSON.parse(saved);
                 if(state.deadline) startTimer();
                 showApp();
             } else {
-                const now = new Date();
-                now.setHours(now.getHours() + 1);
+                const now = new Date(); now.setHours(now.getHours() + 1);
                 document.getElementById('deadlineTime').value = now.toTimeString().slice(0,5);
                 showSetup();
             }
@@ -240,33 +205,24 @@
             const gain = audioCtx.createGain();
             osc.connect(gain); gain.connect(audioCtx.destination);
             if (type === 'success') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(523.25, audioCtx.currentTime);
-                osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
                 osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.5);
             } else if (type === 'warning') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(440, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.setValueAtTime(0, audioCtx.currentTime + 0.1);
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.2);
-                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+                osc.type = 'square'; osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime); gain.gain.setValueAtTime(0, audioCtx.currentTime + 0.1); gain.gain.setValueAtTime(0.1, audioCtx.currentTime + 0.2); gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
                 osc.start(audioCtx.currentTime); osc.stop(audioCtx.currentTime + 0.4);
             }
         }
 
         function startTimer() {
             if(timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(updateClock, 1000);
-            updateClock();
+            timerInterval = setInterval(updateClock, 1000); updateClock();
         }
 
         function updateClock() {
             if(!state.deadline) return;
-            const now = Date.now();
-            const diff = state.deadline - now;
+            const diff = state.deadline - Date.now();
             const display = document.getElementById('countdownDisplay');
             const banner = document.getElementById('deadlineBanner');
 
@@ -282,43 +238,32 @@
             display.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 
             const totalMins = diff / 60000;
-            if (totalMins <= 1 && !state.warningsTriggered.m1) triggerWarning('m1', 'bg-red-500/90');
-            else if (totalMins <= 5 && !state.warningsTriggered.m5) triggerWarning('m5', 'bg-red-500/90');
-            else if (totalMins <= 15 && !state.warningsTriggered.m15) triggerWarning('m15', 'bg-orange-500/90');
+            if (totalMins <= 1 && !state.warningsTriggered.m1) triggerWarning('m1', 'bg-red-500/90 text-white');
+            else if (totalMins <= 5 && !state.warningsTriggered.m5) triggerWarning('m5', 'bg-red-500/90 text-white');
+            else if (totalMins <= 15 && !state.warningsTriggered.m15) triggerWarning('m15', 'bg-orange-500/90 text-white');
             else if (totalMins <= 30 && !state.warningsTriggered.m30) triggerWarning('m30', 'bg-amber-500/90 text-amber-950');
         }
 
         function triggerWarning(flag, colorClass) {
-            state.warningsTriggered[flag] = true;
-            playSound('warning');
-            document.getElementById('deadlineBanner').className = `${colorClass} backdrop-blur-md rounded-2xl p-4 flex justify-between items-center shadow-lg transition-colors duration-500 text-white`;
+            state.warningsTriggered[flag] = true; playSound('warning');
+            document.getElementById('deadlineBanner').className = `${colorClass} backdrop-blur-md rounded-2xl p-4 flex justify-between items-center shadow-lg transition-colors duration-500`;
             saveState();
         }
 
         function populateDropdowns() {
-            const startSelect = document.getElementById('rangeStart');
-            const endSelect = document.getElementById('rangeEnd');
-            for (let i = 0; i <= 1000; i++) {
-                startSelect.add(new Option(i, i)); endSelect.add(new Option(i, i));
-            }
+            const startSelect = document.getElementById('rangeStart'); const endSelect = document.getElementById('rangeEnd');
+            for (let i = 0; i <= 1000; i++) { startSelect.add(new Option(i, i)); endSelect.add(new Option(i, i)); }
             startSelect.value = "0"; endSelect.value = "10";
         }
 
         function toggleDarkMode() {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.theme = isDark ? 'dark' : 'light';
+            document.getElementById('theme-icon').innerText = isDark ? '☀️' : '🌙';
         }
 
-        function showSetup() {
-            document.getElementById('setupView').classList.remove('hidden');
-            document.getElementById('appView').classList.add('hidden');
-        }
-
-        function showApp() {
-            document.getElementById('setupView').classList.add('hidden');
-            document.getElementById('appView').classList.remove('hidden');
-            renderList();
-        }
+        function showSetup() { document.getElementById('setupView').classList.remove('hidden'); document.getElementById('appView').classList.add('hidden'); }
+        function showApp() { document.getElementById('setupView').classList.add('hidden'); document.getElementById('appView').classList.remove('hidden'); renderList(); }
 
         function initializeProject() {
             initAudio(); 
@@ -354,15 +299,9 @@
             const now = Date.now();
             
             if (newStatus === 'validate-start') file.t_val_start = now;
-            else if (newStatus === 'validated') {
-                file.t_val_end = now;
-                if (file.t_val_start) file.dur_val = now - file.t_val_start;
-            } else if (newStatus === 'upload-start') file.t_up_start = now;
-            else if (newStatus === 'upload-completed') {
-                file.t_up_end = now;
-                if (file.t_up_start) file.dur_up = now - file.t_up_start;
-                playSound('success'); 
-            }
+            else if (newStatus === 'validated') { file.t_val_end = now; if (file.t_val_start) file.dur_val = now - file.t_val_start; }
+            else if (newStatus === 'upload-start') file.t_up_start = now;
+            else if (newStatus === 'upload-completed') { file.t_up_end = now; if (file.t_up_start) file.dur_up = now - file.t_up_start; playSound('success'); }
             
             file.status = newStatus;
             saveState(); renderList();
@@ -385,9 +324,7 @@
                 if (file.name.toLowerCase().includes(searchTerm)) {
                     const row = document.createElement('div');
                     row.className = `glass-panel p-4 md:p-5 rounded-3xl shadow-sm flex flex-row items-center justify-between gap-4 transition-all duration-300 hover:shadow-md`;
-                    const nameClass = isCompleted 
-                        ? 'font-bold text-[15px] text-emerald-500 line-through decoration-emerald-500/50 opacity-80 name-transition'
-                        : 'font-bold text-[15px] text-slate-900 dark:text-white name-transition';
+                    const nameClass = isCompleted ? 'font-bold text-[15px] text-emerald-500 line-through decoration-emerald-500/50 opacity-80 name-transition' : 'font-bold text-[15px] text-slate-900 dark:text-white name-transition';
 
                     row.innerHTML = `
                         <div class="flex items-center"><span class="${nameClass}">${file.name}</span></div>
@@ -412,7 +349,7 @@
             document.getElementById('progressText').innerText = percent + '%';
             
             if(percent === 100) {
-                document.getElementById('progressText').classList.replace('text-blue-500', 'text-emerald-400');
+                document.getElementById('progressText').classList.replace('text-blue-600', 'text-emerald-500');
                 document.getElementById('progressBar').classList.replace('bg-blue-500', 'bg-emerald-500');
                 if(timerInterval) clearInterval(timerInterval);
                 document.getElementById('deadlineBanner').className = "bg-emerald-500/90 backdrop-blur-md text-white rounded-2xl p-4 flex justify-between items-center shadow-lg transition-colors duration-500";
@@ -434,7 +371,7 @@
             return s === 'validate-start' ? 'text-amber-500' : 'text-blue-500';
         }
 
-        function saveState() { localStorage.setItem('fileFlowCurrent_v11', JSON.stringify(state)); }
+        function saveState() { localStorage.setItem('fileFlowCurrent_v12', JSON.stringify(state)); }
 
         function copyData() {
             let str = "Name\tStatus\tVal_Time_Sec\tUp_Time_Sec\n";
@@ -453,7 +390,7 @@
         }
 
         function resetApp() {
-            if (confirm("Reset current sequence and deadline?")) { localStorage.removeItem('fileFlowCurrent_v11'); location.reload(); }
+            if (confirm("Reset current sequence and deadline?")) { localStorage.removeItem('fileFlowCurrent_v12'); location.reload(); }
         }
     </script>
 </body>
