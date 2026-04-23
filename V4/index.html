@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>File Flow Ultimate</title>
+    <title>File Flow | Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: { 
-                        sans: ['Inter', 'sans-serif'],
+                        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
                         mono: ['JetBrains Mono', 'monospace'] 
                     },
                 }
@@ -20,95 +20,114 @@
         }
     </script>
     <style>
-        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
-        .status-btn { @apply px-3 py-2 text-[10px] font-bold uppercase rounded-lg border-2 transition-all whitespace-nowrap flex-1 text-center; }
+        .segmented-control::-webkit-scrollbar { display: none; }
+        .segmented-control { -ms-overflow-style: none; scrollbar-width: none; }
+        .glass-panel { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .dark .glass-panel { background: rgba(30, 41, 59, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
         
-        /* Mobile-friendly horizontal scroll for buttons if they overflow */
-        .btn-container::-webkit-scrollbar { display: none; }
-        .btn-container { -ms-overflow-style: none; scrollbar-width: none; }
+        /* Custom styling to ensure the native select options look decent where possible */
+        select option { background-color: #ffffff; color: #1d1d1f; }
+        .dark select option { background-color: #1e293b; color: #f5f5f7; }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-[#0f172a] text-slate-900 dark:text-slate-100 min-h-screen selection:bg-blue-500/30">
+<body class="bg-[#f5f5f7] dark:bg-[#000000] text-[#1d1d1f] dark:text-[#f5f5f7] min-h-screen selection:bg-blue-500/30 antialiased">
 
     <div class="max-w-4xl mx-auto p-4 md:p-10">
         <header class="flex justify-between items-center mb-10">
             <div>
-                <h1 class="text-3xl md:text-4xl font-black tracking-tighter">FILEFLOW<span class="text-blue-500">.6</span></h1>
-                <p class="text-xs font-mono text-slate-400 uppercase tracking-widest mt-1">Status: Production Ready</p>
+                <h1 class="text-3xl md:text-4xl font-bold tracking-tight">FILEFLOW</h1>
+                <p class="text-[11px] font-medium text-slate-500 uppercase tracking-widest mt-1">Current Workspace</p>
             </div>
-            <div class="flex gap-2">
-                <button onclick="toggleDarkMode()" class="p-3 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm">
-                    <span id="theme-icon">🌙</span>
+            <div class="flex gap-3">
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm flex items-center justify-center transition-transform active:scale-95">
+                    <span id="theme-icon" class="text-sm">🌙</span>
                 </button>
-                <button onclick="exportData()" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition">Export</button>
+                <button onclick="exportData()" class="px-5 py-2 bg-blue-600 text-white rounded-full font-semibold text-sm hover:bg-blue-700 shadow-sm transition-transform active:scale-95">
+                    Export
+                </button>
             </div>
         </header>
 
-        <div id="setupView" class="bg-white dark:bg-slate-900 rounded-[2rem] p-8 border border-slate-200 dark:border-slate-800 shadow-xl mb-10 hidden">
-            <h2 class="text-xl font-bold mb-6 flex items-center gap-2">
-                <span class="w-2 h-2 bg-blue-500 rounded-full animate-ping"></span>
-                Initialize Batch Range
-            </h2>
-            <div class="grid grid-cols-2 gap-4 mb-8">
+        <div id="setupView" class="glass-panel rounded-3xl p-8 border border-white dark:border-slate-800 shadow-xl mb-10 hidden">
+            <h2 class="text-xl font-semibold mb-6">Initialize Batch Range</h2>
+            <div class="grid grid-cols-2 gap-6 mb-8">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">From ID</label>
-                    <input type="number" id="rangeStart" value="0" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border-none focus:ring-2 ring-blue-500 outline-none font-mono text-xl">
+                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">From ID</label>
+                    <div class="relative">
+                        <select id="rangeStart" class="w-full bg-slate-100 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/10 outline-none font-mono text-xl transition-all appearance-none cursor-pointer pr-10">
+                            </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase mb-2">To ID</label>
-                    <input type="number" id="rangeEnd" value="10" class="w-full bg-slate-50 dark:bg-slate-800 p-4 rounded-2xl border-none focus:ring-2 ring-blue-500 outline-none font-mono text-xl">
+                    <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">To ID</label>
+                    <div class="relative">
+                        <select id="rangeEnd" class="w-full bg-slate-100 dark:bg-slate-900/50 p-4 rounded-2xl border border-transparent focus:border-blue-500 focus:ring-4 ring-blue-500/10 outline-none font-mono text-xl transition-all appearance-none cursor-pointer pr-10">
+                            </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <button onclick="initializeProject()" class="w-full py-4 bg-slate-900 dark:bg-blue-600 text-white rounded-2xl font-black hover:opacity-90 transition-all">
-                GENERATE SEQUENCE
+            <button onclick="initializeProject()" class="w-full py-4 bg-[#1d1d1f] dark:bg-white dark:text-[#1d1d1f] text-white rounded-2xl font-semibold hover:opacity-90 transition-all active:scale-[0.98]">
+                Generate Sequence
             </button>
         </div>
 
         <div id="appView" class="hidden space-y-6">
-            <div class="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
-                <div class="flex justify-between items-end mb-4">
+            <div class="glass-panel rounded-3xl p-8 border border-white/50 dark:border-slate-800 shadow-sm">
+                <div class="flex justify-between items-end mb-6">
                     <div class="space-y-1">
-                        <span id="progressText" class="text-4xl font-black text-blue-500">0%</span>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Global Completion</p>
+                        <span id="progressText" class="text-5xl font-semibold tracking-tight text-blue-500">0%</span>
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Global Completion</p>
                     </div>
                     <div class="text-right hidden md:block">
-                        <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">Avg Lead Times</p>
-                        <div class="flex gap-4 text-sm font-mono">
+                        <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Avg Lead Times</p>
+                        <div class="flex gap-4 text-sm font-mono font-medium">
                             <div class="text-amber-500">VAL: <span id="avg-val">0s</span></div>
                             <div class="text-blue-500">UP: <span id="avg-up">0s</span></div>
                         </div>
                     </div>
                 </div>
-                <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
-                    <div id="progressBar" class="h-full bg-blue-500 transition-all duration-1000 shadow-[0_0_20px_rgba(59,130,246,0.4)]" style="width: 0%"></div>
+                <div class="w-full bg-slate-200/50 dark:bg-slate-800/50 h-3 rounded-full overflow-hidden">
+                    <div id="progressBar" class="h-full bg-blue-500 transition-all duration-1000 ease-out" style="width: 0%"></div>
                 </div>
-                <div class="md:hidden flex justify-between mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 font-mono text-[10px]">
-                    <span>AVG VALIDATE: <b id="avg-val-m">0s</b></span>
-                    <span>AVG UPLOAD: <b id="avg-up-m">0s</b></span>
+                <div class="md:hidden flex justify-between mt-6 pt-4 border-t border-slate-200 dark:border-slate-800 font-mono text-[11px] font-medium text-slate-500">
+                    <span>VAL: <b id="avg-val-m" class="text-amber-500">0s</b></span>
+                    <span>UP: <b id="avg-up-m" class="text-blue-500">0s</b></span>
                 </div>
             </div>
 
             <input type="text" id="searchInput" oninput="renderList()" placeholder="Filter files..." 
-                class="w-full bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 focus:ring-2 ring-blue-500 outline-none shadow-sm transition-all">
+                class="w-full bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 focus:ring-4 ring-blue-500/10 focus:border-blue-500 outline-none shadow-sm transition-all text-sm font-medium">
 
             <div id="fileListContainer" class="space-y-3"></div>
 
-            <button onclick="resetApp()" class="w-full py-4 text-xs font-bold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition">
+            <button onclick="resetApp()" class="w-full py-4 text-[13px] font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-2xl transition-colors mt-4">
                 Wipe Current Batch Data
             </button>
         </div>
 
-        <footer class="mt-20 pt-10 border-t border-slate-200 dark:border-slate-800">
-            <h3 class="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Internal Releases</h3>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                <a href="../V1/" class="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 hover:border-blue-500 transition">
-                    v1.0 Basic Tracker
+        <footer class="mt-24 pt-10 border-t border-slate-200 dark:border-slate-800">
+            <h3 class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-5 text-center md:text-left">Version Archive</h3>
+            <div class="flex flex-wrap justify-center md:justify-start gap-3">
+                <a href="https://umullick.in/File_Status/V1/" class="px-4 py-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 hover:text-blue-500 hover:border-blue-500 transition-colors shadow-sm">
+                    V1 Basic
                 </a>
-                <a href="../" class="p-3 bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 text-[10px] font-bold text-slate-500 hover:border-blue-500 transition">
-                    v2.0 Analytics Base
+                <a href="https://umullick.in/File_Status/V2/" class="px-4 py-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 hover:text-blue-500 hover:border-blue-500 transition-colors shadow-sm">
+                    V2 Analytics
                 </a>
-                <div class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 text-[10px] font-bold text-blue-600">
-                    v6.0 Ultimate (Current)
+                <a href="https://umullick.in/File_Status/V3/" class="px-4 py-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 hover:text-blue-500 hover:border-blue-500 transition-colors shadow-sm">
+                    V3 Pro
+                </a>
+                <a href="https://umullick.in/File_Status/V4/" class="px-4 py-2 bg-white dark:bg-slate-900 rounded-full border border-slate-200 dark:border-slate-800 text-xs font-medium text-slate-500 hover:text-blue-500 hover:border-blue-500 transition-colors shadow-sm">
+                    V4 Timeline
+                </a>
+                <div class="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full border border-blue-200 dark:border-blue-800 text-xs font-semibold text-blue-600 shadow-sm">
+                    Current Version
                 </div>
             </div>
         </footer>
@@ -119,12 +138,17 @@
         const statuses = ['validate-start', 'validated', 'upload-start', 'upload-completed'];
 
         window.onload = () => {
+            // Theme Logic
             if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
                 document.documentElement.classList.add('dark');
                 document.getElementById('theme-icon').innerText = '☀️';
             }
             
-            const saved = localStorage.getItem('fileFlowUltimate_v6');
+            // Populate Dropdowns
+            populateDropdowns();
+
+            // Load Data
+            const saved = localStorage.getItem('fileFlowCurrent_v7');
             if (saved) {
                 state = JSON.parse(saved);
                 showApp();
@@ -132,6 +156,21 @@
                 showSetup();
             }
         };
+
+        function populateDropdowns() {
+            const startSelect = document.getElementById('rangeStart');
+            const endSelect = document.getElementById('rangeEnd');
+            
+            // Populates dropdowns from 0 to 1000
+            for (let i = 0; i <= 1000; i++) {
+                startSelect.add(new Option(i, i));
+                endSelect.add(new Option(i, i));
+            }
+            
+            // Set defaults
+            startSelect.value = "0";
+            endSelect.value = "10";
+        }
 
         function toggleDarkMode() {
             const isDark = document.documentElement.classList.toggle('dark');
@@ -155,7 +194,7 @@
             const end = parseInt(document.getElementById('rangeEnd').value);
             
             if (isNaN(start) || isNaN(end) || end < start) {
-                alert("Invalid range. End must be greater than Start.");
+                alert("Invalid range. 'To ID' must be greater than or equal to 'From ID'.");
                 return;
             }
 
@@ -209,18 +248,19 @@
 
                 if (file.name.toLowerCase().includes(searchTerm)) {
                     const row = document.createElement('div');
-                    row.className = `bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all`;
+                    row.className = `bg-white dark:bg-[#1d1d1f] p-4 md:p-5 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5 transition-all`;
                     
                     row.innerHTML = `
-                        <div class="flex items-center gap-3">
-                            <span class="text-[10px] font-black text-slate-300 dark:text-slate-600 font-mono">ID:${file.id}</span>
-                            <span class="font-bold text-slate-800 dark:text-slate-200">${file.name}</span>
+                        <div class="flex items-center gap-4 px-2 md:px-0">
+                            <span class="text-[10px] font-medium text-slate-400 dark:text-slate-500 font-mono bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">ID:${file.id}</span>
+                            <span class="font-semibold text-sm text-slate-900 dark:text-slate-100">${file.name}</span>
                         </div>
                         
-                        <div class="flex btn-container gap-1 overflow-x-auto">
+                        <div class="flex p-1 bg-slate-100/80 dark:bg-slate-800/80 rounded-2xl overflow-x-auto segmented-control border border-slate-200/50 dark:border-slate-700/50 w-full md:w-auto">
                             ${statuses.map(s => `
                                 <button onclick="updateStatus(${file.id}, '${s}')" 
-                                    class="status-btn ${file.status === s ? getActiveColor(s) : 'bg-transparent border-slate-100 dark:border-slate-800 text-slate-400'}">
+                                    class="px-4 py-2 text-[11px] font-medium rounded-xl whitespace-nowrap transition-all duration-300 flex-1 md:flex-none text-center
+                                    ${file.status === s ? getActiveColor(s) : 'text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}">
                                     ${s.replace('-', ' ')}
                                 </button>
                             `).join('')}
@@ -244,28 +284,28 @@
         }
 
         function getActiveColor(s) {
-            if (s === 'validate-start') return 'bg-amber-100 border-amber-500 text-amber-700 dark:bg-amber-900/20';
-            if (s === 'validated') return 'bg-amber-500 border-amber-500 text-white';
-            if (s === 'upload-start') return 'bg-blue-100 border-blue-500 text-blue-700 dark:bg-blue-900/20';
-            if (s === 'upload-completed') return 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20';
+            if (s === 'validate-start') return 'bg-white dark:bg-slate-700 text-amber-600 shadow-sm border border-slate-200/50 dark:border-slate-600';
+            if (s === 'validated') return 'bg-amber-500 text-white shadow-md shadow-amber-500/20 border border-transparent';
+            if (s === 'upload-start') return 'bg-white dark:bg-slate-700 text-blue-600 shadow-sm border border-slate-200/50 dark:border-slate-600';
+            if (s === 'upload-completed') return 'bg-emerald-500 text-white shadow-md shadow-emerald-500/20 border border-transparent';
         }
 
         function saveAndRender() {
-            localStorage.setItem('fileFlowUltimate_v6', JSON.stringify(state));
+            localStorage.setItem('fileFlowCurrent_v7', JSON.stringify(state));
             renderList();
         }
 
         function exportData() {
-            let csv = "ID,Name,Status,Val_Time,Up_Time\n";
+            let csv = "ID,Name,Status,Val_Time_Sec,Up_Time_Sec\n";
             state.files.forEach(f => csv += `${f.id},${f.name},${f.status},${(f.dur_val/1000).toFixed(2)},${(f.dur_up/1000).toFixed(2)}\n`);
             const blob = new Blob([csv], { type: 'text/csv' });
             const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a'); a.href = url; a.download = `Report_${Date.now()}.csv`; a.click();
+            const a = document.createElement('a'); a.href = url; a.download = `Batch_Report_${Date.now()}.csv`; a.click();
         }
 
         function resetApp() {
             if (confirm("Reset current sequence?")) {
-                localStorage.removeItem('fileFlowUltimate_v6');
+                localStorage.removeItem('fileFlowCurrent_v7');
                 location.reload();
             }
         }
